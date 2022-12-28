@@ -14,14 +14,6 @@ interface Cell {
     state: CellState
 }
 
-interface AliveCell extends Cell {
-    state: 'alive'
-}
-
-interface DeadCell extends Cell {
-    state: 'alive'
-}
-
 export class GameController {
     private gameState: (CellState [][]) | null = null
 
@@ -29,7 +21,10 @@ export class GameController {
         this.gameState = initialState
     }
 
-    runGame () {
+    runGame (): CellState [][] {
+        if (!this.gameState) {
+            return []
+        }
         let newGameState = this.getNextState()
         while (!this.isFinished(newGameState)) {
             this.gameState = newGameState
@@ -52,9 +47,10 @@ export class GameController {
     }
 
     getNextState (): CellState [][] {
-        const newState: CellState [][] = new Array(this.size).fill([])
+        const newState: CellState [][] = []
 
         this.gameState.forEach((cellArr, y) => {
+            newState[y] = []
             cellArr.forEach((cell, x) => {
                 newState[y][x] = this.changeCellState({
                     address: { x, y },
@@ -78,13 +74,13 @@ export class GameController {
     }
 
     changeDead (cell: Cell): CellState {
-        const deadNeighbours = this.getNeighbours(cell.address).filter(({ x, y }) => this.gameState[x][y] === 'dead')
+        const deadNeighbours = this.getNeighbours(cell.address).filter(({ x, y }) => this.gameState[y][x] === 'dead')
 
         return deadNeighbours.length === 3 ? 'alive' : 'dead'
     }
 
     changeAlive (cell: Cell): CellState {
-        const aliveNeighbours = this.getNeighbours(cell.address).filter(({ x, y }) => this.gameState[x][y] === 'alive')
+        const aliveNeighbours = this.getNeighbours(cell.address).filter(({ x, y }) => this.gameState[y][x] === 'alive')
 
         return aliveNeighbours.length === 2 || aliveNeighbours.length === 3 ? 'alive' : 'dead'
     }
@@ -109,17 +105,17 @@ export class GameController {
 
     fixCoordinate ({ x, y }: Coordinate): Coordinate {
         let newX = x, newY = y
-
+        const lastIndex = this.size - 1
         if (x < 0) {
-            newX = this.size - 1
+            newX = lastIndex
         }
-        if (x > this.size - 1) {
+        if (x > lastIndex) {
             newX = 0
         }
         if (y < 0) {
-            newY = this.size - 1
+            newY = lastIndex
         }
-        if (y > this.size) {
+        if (y > lastIndex) {
             newY = 0
         }
 
